@@ -33,7 +33,8 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
         address _optimismPortal2,
         uint256 _startTime,
         uint256 _endTime,
-        address defaultAdmin
+        address admin,
+        address pauser
     ) public initializer {
         __AccessControl_init();
         __Pausable_init();
@@ -41,23 +42,24 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
         require(_erc20In != address(0), "TokenConversion: invalid _erc20In token address");
         require(_optimismPortal2 != address(0), "TokenConversion: invalid _optimismPortal2 address");
         require(_startTime < _endTime, "TokenConversion: start time must be before end time");
-        require(defaultAdmin != address(0), "TokenConversion: invalid default admin address");
+        require(admin != address(0), "TokenConversion: invalid admin address");
+        require(pauser != address(0), "TokenConversion: invalid pauser address");
 
         erc20In = _erc20In;
         optimismPortal2 = _optimismPortal2;
         startTime = _startTime;
         endTime = _endTime;
 
-        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
-        _grantRole(PAUSER_ROLE, defaultAdmin);
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(PAUSER_ROLE, pauser);
     }
 
     /**
-     * @notice Converts all `erc20` tokens, the caller owns, to `l2 erc20`
-     * tokens. For all `erc20` tokens that is burned the caller receives the
-     * same amount of `l2 erc20` tokens. The token conversion rate is 1:1.
-     * @dev The caller must approve this contract to spend all their `erc20In`
-     * tokens.
+   * @notice Converts a specified amount of `erc20` tokens owned by the caller
+     * into `l2 erc20` tokens at a 1:1 conversion rate.
+     * @dev The caller must approve this contract to spend at least `_amount`
+     * of their `erc20In` tokens before calling this function.
+     * @param _amount The amount of `erc20In` tokens to convert.
      */
     function convert(uint256 _amount) external whenNotPaused {
         address sender = _msgSender();

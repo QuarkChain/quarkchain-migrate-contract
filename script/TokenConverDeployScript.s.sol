@@ -17,7 +17,9 @@ contract TokenConversionScript is Script {
         uint256 END_TIME = START_TIME + 365 days;
 
         uint256 deployerKey = vm.envUint("PRIVATE_KEY_DEPLOYER");
-        address deployer = vm.addr(deployerKey);
+
+        address admin = vm.envAddress("ADMIN_ADDRESS");
+        address pauser = vm.envAddress("PAUSER_ADDRESS");
         address oldQKC = vm.envAddress("OLD_QKC_ADDRESS");
         address optimismPortal2 = vm.envAddress("OPTIMISM_PORTAL2");
 
@@ -31,14 +33,15 @@ contract TokenConversionScript is Script {
             optimismPortal2,
             START_TIME,
             END_TIME,
-            deployer // defaultAdmin
+            admin,
+            pauser
         );
         // Transparent Proxy
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(impl), deployer, initData);
+        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(impl), admin, initData);
 
-        address admin = getAdmin(address(proxy));
+        address proxyAdmin = getAdmin(address(proxy));
         console.log("Implementation:", address(impl));
-        console.log("ProxyAdmin:", address(admin));
+        console.log("ProxyAdmin:", proxyAdmin);
         console.log("Proxy:", address(proxy));
 
         TokenConversion tc = TokenConversion(address(proxy));
