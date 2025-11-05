@@ -22,6 +22,9 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
 
     event TokenConverted(address account, uint256 amount);
     event ConversionPeriodUpdated(uint256 startTime, uint256 endTime);
+    event TokensDrained(address indexed admin, uint256 amount);
+    event ContractPaused(address account);
+    event ContractUnpaused(address account);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -68,22 +71,26 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
         require(block.timestamp < endTime, "TokenConversion: conversion period has ended");
 
         uint256 totalBalance = IERC20(erc20In).balanceOf(sender);
-        require(totalBalance >= _amount, "TokenConversion: no enough tokens to convert");
+        require(totalBalance >= _amount, "TokenConversion: not enough tokens");
         uint256 allowance = IERC20(erc20In).allowance(sender, address(this));
         require(allowance >= _amount, "TokenConversion: insufficient allowance");
 
-        // transfer and burn erc20In tokens
+        // transfer from user to contract
+        uint256 balanceBefore = IERC20(erc20In).balanceOf(address(this));
         IERC20(erc20In).safeTransferFrom(sender, address(this), _amount);
+        uint256 balanceAfter = IERC20(erc20In).balanceOf(address(this));
+        require(balanceAfter - balanceBefore == _amount, "TokenConversion: transfer failed");
+
+        // TODO
+        // burn by sending to dead address
         // Do NOT send tokens to address(0).
         // Many ERC20 implementations treat address(0) as an invalid receiver
         // and will revert the transaction to prevent misuse or accidental loss.
         //
         // Instead, use the "dead" address (0x000...dEaD) which is a known burn address
         // with no private key and is used for pseudo-burning tokens.
-        //  TODO
-        //  IERC20(erc20In).safeTransfer(0x000000000000000000000000000000000000dEaD, erc20InBalance);
-        //  TODO
-        //  IERC20(erc20In).safeTransferFrom(sender, 0x000000000000000000000000000000000000dEaD, erc20InBalance);
+        // address receiver = 0x000000000000000000000000000000000000dEaD;
+        // IERC20(erc20In).safeTransfer(receiver, _amount);
 
         // mint l2 token
         IOptimismPortal2(optimismPortal2).mintTransaction(sender, _amount);
@@ -101,6 +108,7 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
         require(balance > 0, "TokenConversion: no tokens to drain");
 
         IERC20(erc20In).safeTransfer(sender, balance);
+        emit TokensDrained(sender, balance);
     }
 
     /**
@@ -124,6 +132,7 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
      */
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
+        emit ContractPaused(_msgSender());
     }
 
     /**
@@ -132,5 +141,6 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
      */
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
+        emit ContractUnpaused(_msgSender());
     }
 }

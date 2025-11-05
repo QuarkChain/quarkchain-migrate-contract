@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
-export $(grep -v '^#' .env | xargs)
+if [[ ! -f .env ]]; then
+  echo "❌ .env file not found"
+  exit 1
+fi
 
+export $(grep -v '^#' .env | xargs)
 if [[ -z "$RPC_URL" || -z "$PRIVATE_KEY_DEPLOYER" || -z "$ETHERSCAN_API_KEY" ]]; then
   echo "❌ Missing RPC_URL / PRIVATE_KEY_DEPLOYER / ETHERSCAN_API_KEY in .env"
   exit 1
