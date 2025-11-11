@@ -22,5 +22,7 @@ forge script script/TokenConverDeployScript.s.sol \
   --rpc-url "$RPC_URL" \
   --private-key "$PRIVATE_KEY_DEPLOYER" \
   --broadcast \
+  --retries 30 \
+  --delay 10 \
   --verify \
   --etherscan-api-key "$ETHERSCAN_API_KEY"
