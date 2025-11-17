@@ -14,6 +14,7 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
     using SafeERC20 for IERC20;
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
 
     address public erc20In;
     address public optimismPortal2;
@@ -37,7 +38,8 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
         uint256 _startTime,
         uint256 _endTime,
         address admin,
-        address pauser
+        address pauser,
+        address miner
     ) public initializer {
         __AccessControl_init();
         __Pausable_init();
@@ -55,10 +57,11 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, pauser);
+        _grantRole(MINER_ROLE, miner);
     }
 
     /**
-   * @notice Converts a specified amount of `erc20` tokens owned by the caller
+     * @notice Converts a specified amount of `erc20` tokens owned by the caller
      * into `l2 erc20` tokens at a 1:1 conversion rate.
      * @dev The caller must approve this contract to spend at least `_amount`
      * of their `erc20In` tokens before calling this function.
@@ -99,6 +102,16 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
     }
 
     /**
+     * @notice Mints L2 tokens to a specified address. Used for quarkchain mainnet to L2 token migration.
+     * @dev Only accounts with the MINER_ROLE can call this function.
+     * @param _to The address to mint L2 tokens to.
+     * @param _amount The amount of L2 tokens to mint.
+     */
+    function mintL2Tokens(address _to, uint256 _amount) external onlyRole(MINER_ROLE) {
+        IOptimismPortal2(optimismPortal2).mintTransaction(_to, _amount);
+    }
+
+    /**
      * @notice Drains all `erc20Out` tokens from the contract to the caller.
      * @dev Only the contract admin can call this function.
      */
@@ -124,6 +137,30 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
         endTime = _endTime;
 
         emit ConversionPeriodUpdated(_startTime, _endTime);
+    }
+
+    /**
+     * @notice Checks if an account has the admin role.
+     * @param account The address to check for admin role.
+     */
+    function isAdmin(address account) public view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, account);
+    }
+
+    /**
+     * @notice Checks if an account has the pauser role.
+     * @param account The address to check for pauser role.
+     */
+    function isPauser(address account) public view returns (bool) {
+        return hasRole(PAUSER_ROLE, account);
+    }
+
+    /**
+     * @notice Checks if an account has the miner role.
+     * @param account The address to check for miner role.
+     */
+    function isMiner(address account) public view returns (bool) {
+        return hasRole(MINER_ROLE, account);
     }
 
     /**

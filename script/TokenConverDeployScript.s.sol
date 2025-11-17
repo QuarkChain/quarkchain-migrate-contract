@@ -20,6 +20,7 @@ contract TokenConversionScript is Script {
 
         address admin = vm.envAddress("ADMIN_ADDRESS");
         address pauser = vm.envAddress("PAUSER_ADDRESS");
+        address minter = vm.envAddress("MINER_ADDRESS");
         address oldQKC = vm.envAddress("OLD_QKC_ADDRESS");
         address optimismPortal2 = vm.envAddress("OPTIMISM_PORTAL2");
 
@@ -28,13 +29,7 @@ contract TokenConversionScript is Script {
         TokenConversion impl = new TokenConversion();
         // init data
         bytes memory initData = abi.encodeWithSelector(
-            TokenConversion.initialize.selector,
-            oldQKC,
-            optimismPortal2,
-            START_TIME,
-            END_TIME,
-            admin,
-            pauser
+            TokenConversion.initialize.selector, oldQKC, optimismPortal2, START_TIME, END_TIME, admin, pauser, minter
         );
         // Transparent Proxy
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(impl), admin, initData);
