@@ -20,7 +20,7 @@ contract TokenConversionScript is Script {
 
         address admin = vm.envAddress("ADMIN_ADDRESS");
         address pauser = vm.envAddress("PAUSER_ADDRESS");
-        address minter = vm.envAddress("MINER_ADDRESS");
+        address minter = vm.envAddress("MINTER_ADDRESS");
         address oldQKC = vm.envAddress("OLD_QKC_ADDRESS");
         address optimismPortal2 = vm.envAddress("OPTIMISM_PORTAL2");
 
