@@ -102,7 +102,7 @@ contract TokenConversion is Initializable, PausableUpgradeable, AccessControlUpg
     }
 
     /**
-     * @notice Mints L2 tokens to a specified address. Used for quarkchain mainnet to L2 token migration.
+     * @notice Mints L2 tokens to a specified address. Used to migrate QuarkChain mainnet tokens that are not mapped by ERC20 to the L2 tokens.
      * @dev Only accounts with the MINER_ROLE can call this function.
      * @param _to The address to mint L2 tokens to.
      * @param _amount The amount of L2 tokens to mint.
